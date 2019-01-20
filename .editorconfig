@@ -1,0 +1,10 @@
+[*.py]
+indent_style = space
+indent_size = 4
+
+# isort
+force_to_top = True
+line_length = 88
+known_third_party=xlrd,openpyxl,flask
+default_section=FIRSTPARTY
+balanced_wrapping = True

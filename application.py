@@ -1,17 +1,12 @@
-# Setting up for online ability
-from flask import Flask, flash, redirect, render_template, request, send_file, Response
-
-# Reading and writing an excel file using Python
-import xlrd
-import openpyxl
 from tempfile import NamedTemporaryFile
 
+import openpyxl
+import xlrd
+from flask import Flask, Response, flash, redirect, render_template, request, send_file
 
-# Helper functions I wrote to clean up application.py code
-from Helpers import create_campers, create_activities, update_campers, sort_campers
-from xls_output import output_master_excel
 from guarding import check_preferences_for_input_errors, output_errors
-
+from Helpers import create_activities, create_campers, sort_campers, update_campers
+from xls_output import output_master_excel
 
 # ======================================================================================
 
@@ -21,12 +16,14 @@ app = Flask(__name__)
 
 # Ensure responses aren't cached
 if app.config["DEBUG"]:
+
     @app.after_request
     def after_request(response):
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Expires"] = 0
         response.headers["Pragma"] = "no-cache"
         return response
+
 
 # Create homescreen
 @app.route("/")
@@ -54,7 +51,11 @@ def sorted():
             tmp.seek(0)
             stream = tmp.read()
 
-            r = Response(response=stream, status=200, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            r = Response(
+                response=stream,
+                status=200,
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
             r.headers["Content-Disposition"] = 'attachment; filename="errors.xlsx"'
             return r
 
@@ -86,6 +87,12 @@ def sorted():
         tmp.seek(0)
         stream = tmp.read()
 
-        r = Response(response=stream, status=200, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        r.headers["Content-Disposition"] = 'attachment; filename="%s.xlsx"' % request.form.get("filename")
+        r = Response(
+            response=stream,
+            status=200,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        r.headers[
+            "Content-Disposition"
+        ] = 'attachment; filename="%s.xlsx"' % request.form.get("filename")
         return r

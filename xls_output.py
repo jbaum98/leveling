@@ -1,8 +1,10 @@
-from openpyxl import Workbook
-from openpyxl.styles import PatternFill, Font
-from openpyxl.utils import get_column_letter
 from functools import reduce
 from operator import add
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
+from openpyxl.utils import get_column_letter
+
 
 def output_master_excel(campers_list, activities_list):
     """Output master excel document"""
@@ -26,32 +28,44 @@ def output_master_excel(campers_list, activities_list):
     header += ["Preference %d" % i for i in range(1, 7)]
     if max_past_activities != 0:
         # Reduce takes an iterator and an operator and applies the operator one by one
-        header += reduce(add, (["Past Peulah %d" % i, "Past Preference %d" % i] for i in range(1, max_past_activities + 1)))
+        header += reduce(
+            add,
+            (
+                ["Past Peulah %d" % i, "Past Preference %d" % i]
+                for i in range(1, max_past_activities + 1)
+            ),
+        )
 
     # Write header row
     for i, item in enumerate(header):
-        sheet.cell(row=1, column=i+1).value = item
-
+        sheet.cell(row=1, column=i + 1).value = item
 
     # Create a list representing the row
     for row, camper in enumerate(campers_list):
-        attributes = [(camper.name, None, None),
-                      (camper.edah, None, None),
-                      (camper.bunk, None, None),
-                      format_activity(camper),
-                      (camper.pref_1, None, None),
-                      (camper.pref_2, None, None),
-                      (camper.pref_3, None, None),
-                      (camper.pref_4, None, None),
-                      (camper.pref_5, None, None),
-                      (camper.pref_6, None, None),
-                      ]
+        attributes = [
+            (camper.name, None, None),
+            (camper.edah, None, None),
+            (camper.bunk, None, None),
+            format_activity(camper),
+            (camper.pref_1, None, None),
+            (camper.pref_2, None, None),
+            (camper.pref_3, None, None),
+            (camper.pref_4, None, None),
+            (camper.pref_5, None, None),
+            (camper.pref_6, None, None),
+        ]
 
         # Add camper histories as attributes of a camper to be written
         if camper.past_activities != []:
-            attributes += reduce(add, ([(activity, None, None), (preference, None, None)]
-                          for activity, preference
-                          in zip(camper.past_activities, camper.past_preferences)))
+            attributes += reduce(
+                add,
+                (
+                    [(activity, None, None), (preference, None, None)]
+                    for activity, preference in zip(
+                        camper.past_activities, camper.past_preferences
+                    )
+                ),
+            )
 
         # This does the actual writing of information from the row list
         for col, (text, color, font) in enumerate(attributes):
@@ -61,8 +75,6 @@ def output_master_excel(campers_list, activities_list):
                 cell.fill = color
             if font is not None:
                 cell.font = font
-
-
 
     # Write the second sheet of the output
     # Create 2nd worksheet
@@ -74,8 +86,6 @@ def output_master_excel(campers_list, activities_list):
         i = get_column_letter(column)
         sheet2.column_dimensions[i].width = 23
 
-
-
     groups = group_by_activity(campers_list)
     add_empty_spots(groups, activities_list)
 
@@ -85,12 +95,16 @@ def output_master_excel(campers_list, activities_list):
             sheet2.cell(row=row, column=1).value = activity
             camper_cell = sheet2.cell(row=row, column=2)
             if camper is None:
-                camper_cell.fill = PatternFill(start_color='2BFFF5', end_color='2BFFF5', fill_type = "solid")
+                camper_cell.fill = PatternFill(
+                    start_color="2BFFF5", end_color="2BFFF5", fill_type="solid"
+                )
             else:
                 camper_cell.value = camper.name
                 # Camper hasn't been assigned yet - TODO: reformat
                 if camper.next_activity == "":
-                    camper_cell.fill = PatternFill(start_color='000000', end_color='000000', fill_type = "solid")
+                    camper_cell.fill = PatternFill(
+                        start_color="000000", end_color="000000", fill_type="solid"
+                    )
                     camper_cell.font = Font(color="FFFFFF")
                 else:
                     camper_cell.fill = determine_color(camper.past_preferences[-1])
@@ -98,7 +112,6 @@ def output_master_excel(campers_list, activities_list):
         row += 1
 
     return book
-
 
 
 def group_by_activity(campers_list):
@@ -111,7 +124,6 @@ def group_by_activity(campers_list):
             groups[camper.next_activity] = [camper]
 
     return groups
-
 
 
 def add_empty_spots(groups, activities_list):
@@ -127,22 +139,27 @@ def add_empty_spots(groups, activities_list):
 
 
 """Assign color to a cell in an Excel Document based on Camper preference"""
+
+
 def format_activity(camper):
     # Create an alert color if a camper wasn't assigned an activity
     if camper.next_activity == "":
-        return "NO ACTIVITY ASSIGNED", PatternFill(start_color='000000', end_color='000000', fill_type = "solid"), Font(color="FFFFFF")
+        return (
+            "NO ACTIVITY ASSIGNED",
+            PatternFill(start_color="000000", end_color="000000", fill_type="solid"),
+            Font(color="FFFFFF"),
+        )
     else:
         # We know that there's at least one element in campers.past_preferences
         return camper.next_activity, determine_color(camper.past_preferences[-1]), None
 
 
-
 def determine_color(number):
     if number == 1:
-        return PatternFill(start_color='0fc70f', end_color='0fc70f', fill_type = "solid")
+        return PatternFill(start_color="0fc70f", end_color="0fc70f", fill_type="solid")
     elif number == 2:
-        return PatternFill(start_color='FFEE08', end_color='FFEE08', fill_type = "solid")
+        return PatternFill(start_color="FFEE08", end_color="FFEE08", fill_type="solid")
     elif number == 3:
-        return PatternFill(start_color='dd9a1f', end_color='dd9a1f', fill_type = "solid")
+        return PatternFill(start_color="dd9a1f", end_color="dd9a1f", fill_type="solid")
     else:
-        return PatternFill(start_color='ff0000', end_color='ff0000', fill_type = "solid")
+        return PatternFill(start_color="ff0000", end_color="ff0000", fill_type="solid")
